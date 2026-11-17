@@ -73,7 +73,7 @@ function setupDeductionsMenu(containerEl: Element) {
   const updateMenu = () => {
     removeGhostPreview();
     const query = Array.from(containerEl.querySelectorAll(PARAGRAPH_TARGET))
-      .map(p => (p as Element).textContent.trim()).join(' ');
+      .map(p => (p as Element).textContent?.trim()).join(' ');
     const normalized = query.trim().toLowerCase();
 
     // Janky search functionality, currently just searches for direct matches to query
