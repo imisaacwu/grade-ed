@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Rule } from '../types';
+import type { Rule } from '../types';
 import RuleItem from '../components/RuleItem';
 import RuleModal from '../components/RuleModal';
 import { deleteRule, loadRules, upsertRule } from '../utils/rules';

@@ -8,7 +8,7 @@
     "clean": "rm -rf dist"
   },
   "keywords": [],
-  "author": "Your Name",
+  "author": "Isaac Wu",
   "license": "MIT",
   "devDependencies": {
     "@types/chrome": "^0.0.315",

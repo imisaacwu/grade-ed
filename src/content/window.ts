@@ -3,32 +3,34 @@ window.ts is the script that handles the deductions window appearing in ed. Cont
 for new instances of the Ed feedback window (where TA's write comments), and upon finding them,
 injects the HTML + CSS for the deduction window.
 */
+/// <reference types="chrome"/>
 import { marked } from 'marked';
-import { Library } from '../popup/types';
+import type { Library } from '../popup/types';
 
 // TARGET is how we identify Ed feedback windows
-const TARGET = '.feedback-comment-input';
+const TARGET: string = '.feedback-comment-input';
+const PARAGRAPH_TARGET: string = '[class^="_contentEditable_"][role="textbox"]'
+
 // Set containing all feedback windows already "handled" (ones with the deduction window already added)
 let processed = new WeakSet<Element>();
-let DEDUCTIONS = [];
+let DEDUCTIONS: { text: string, score?: number }[] = [];
 let LIVE_PREVIEW_ENABLED = true;
 
 // Utility method for forcing selection of existing text in deduction window
 // Used by simulatePaste() so existing text disappears after paste
-function selectText(element) {
+function selectText(element: HTMLElement) {
   const range = document.createRange();
   range.selectNodeContents(element);
   const selection = window.getSelection();
-  selection.removeAllRanges();
-  selection.addRange(range);
-  console.log("Selected text:", selection.toString());
+  selection?.removeAllRanges();
+  selection?.addRange(range);
+  // console.log("Selected text:", selection?.toString());
 }
 
 // Pastes markdown into ed container
-function simulatePaste(containerEl, markdown) {
-  if (!containerEl || !markdown) return;
+function simulatePaste(containerEl: Element, markdown: string) {
+  const paragraph = containerEl.querySelector(PARAGRAPH_TARGET) as HTMLElement
 
-  const paragraph = containerEl.querySelector('.am-view-paragraphNode');
   if (!paragraph || !paragraph.isContentEditable) {
     console.warn("Could not find editable paragraph");
     return;
@@ -61,26 +63,26 @@ function simulatePaste(containerEl, markdown) {
 // - Inserting HTML + CSS
 // - Adding a listener for changes in the deduction menu, then updates the HTML 
 //   accordingly (this is the search feature)
-function setupDeductionsMenu(containerEl) {
+function setupDeductionsMenu(containerEl: Element) {
   if (containerEl.querySelector('.deduction-menu')) return;
 
   const menu = document.createElement("div");
   menu.className = "deduction-menu";
-  containerEl.firstElementChild.after(menu);
+  containerEl.firstElementChild?.after(menu);
 
   const updateMenu = () => {
     removeGhostPreview();
-    const query = Array.from(containerEl.querySelectorAll('.am-view-paragraphNode'))
+    const query = Array.from(containerEl.querySelectorAll(PARAGRAPH_TARGET))
       .map(p => (p as Element).textContent.trim()).join(' ');
     const normalized = query.trim().toLowerCase();
 
     // Janky search functionality, currently just searches for direct matches to query
     const filteredItems = normalized ?
       DEDUCTIONS
-        .map(text => ({text, score: text.toLowerCase().indexOf(normalized)}))
+        .map(item => ({text: item.text, score: item.text.toLowerCase().indexOf(normalized)}))
         .filter(item => item.score !== -1)
         .sort((a, b) => a.score - b.score)
-      : DEDUCTIONS.map(text => ({ text }));
+      : DEDUCTIONS;
   
     menu.innerHTML = '';
 
@@ -100,7 +102,7 @@ function setupDeductionsMenu(containerEl) {
         // Preview on hover
         menuItem.addEventListener("mouseenter", () => {
           if(!LIVE_PREVIEW_ENABLED) return;
-          const paragraph = containerEl.querySelector('.am-view-paragraphNode');
+          const paragraph = containerEl.querySelector(PARAGRAPH_TARGET) as HTMLElement;
           if (!paragraph || !paragraph.isContentEditable) return;
 
           showGhostPreview(paragraph as HTMLElement, item.text);
@@ -156,15 +158,16 @@ function showGhostPreview(targetEl: HTMLElement, content: string) {
   const targetRect = targetEl.getBoundingClientRect();
   const containerRect = container.getBoundingClientRect();
   const targetStyle = window.getComputedStyle(targetEl);
-  const containerStyle = window.getComputedStyle(container);
-  const padBottom = parseFloat(containerStyle.paddingBottom) || 0;
+  // const containerStyle = window.getComputedStyle(container);
+  const padTop = parseFloat(targetStyle.paddingTop);
+  const padLeft = parseFloat(targetStyle.paddingLeft);
 
   // Anchor to where the paragraph's text actually starts.
-  ghost.style.top = `${targetRect.top + window.scrollY}px`;
-  ghost.style.left = `${targetRect.left + window.scrollX}px`;
-  ghost.style.width = `${targetRect.width}px`;
+  ghost.style.top = `${targetRect.top + window.scrollY + padTop}px`;
+  ghost.style.left = `${targetRect.left + window.scrollX + padLeft}px`;
+  ghost.style.width = `${targetRect.width - 2*padLeft}px`;
   // Allow the preview to grow downward, but never past the editor's bottom.
-  ghost.style.maxHeight = `${Math.max(targetRect.height, containerRect.bottom - padBottom - targetRect.top)}px`;
+  ghost.style.maxHeight = `${Math.max(targetRect.height, targetRect.bottom - targetRect.top) - 2 * padTop}px`;
 
   // Inherit typography so wrapping matches the live editor exactly.
   ghost.style.fontFamily = targetStyle.fontFamily;
@@ -188,7 +191,7 @@ function removeGhostPreview() {
 // Process node (matches to TARGET)
 //  - Set up deductions menu
 //  - Add to processed set
-function processNode(node) {
+function processNode(node: Element) {
   if (!node.matches?.(TARGET) || processed.has(node)) return;
   setupDeductionsMenu(node);
   processed.add(node);
@@ -201,10 +204,10 @@ const observer = new MutationObserver(mutations =>
   mutations.forEach(mutation =>
     mutation.addedNodes.forEach(node => {
       if (node.nodeType === 1) {
-        processNode(node);
-
         // Ensure node is an Element
         if(!(node instanceof Element)) return;
+
+        processNode(node as Element);
         node.querySelectorAll?.(TARGET).forEach(processNode);
       }
     })
@@ -334,7 +337,7 @@ chrome.storage.local.get(['libraries', 'livePreview'], (data) => {
     .filter(lib => lib.enabled)
     .flatMap(lib => lib.deductions);
 
-  DEDUCTIONS = enabledDeductions;
+  DEDUCTIONS = enabledDeductions.map(deduc => ({ text: deduc }));
   console.log("Loaded deductions:", DEDUCTIONS);
 
   document.querySelectorAll(TARGET).forEach(processNode);
@@ -368,7 +371,7 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
       const enabledDeductions = Object.values(newLibraries)
         .filter(lib => isEnabledLibrary(lib))
         .flatMap(lib => lib.deductions || []);
-      DEDUCTIONS = enabledDeductions;
+      DEDUCTIONS = enabledDeductions.map(deduc => ({ text: deduc }));
       //console.log('Deductions updated from storage change:', DEDUCTIONS); // debug
       shouldReload = true;
     }
@@ -380,6 +383,5 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
     }
   }
 });
-
 
 document.head.appendChild(style);

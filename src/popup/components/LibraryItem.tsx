@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Library } from '../types';
+import type { Library } from '../types';
 import { updateLibrary, deleteLibrary } from '../utils/libraryStorage';
 
 type LibraryItemProps = {

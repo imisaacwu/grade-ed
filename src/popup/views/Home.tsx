@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Library } from '../types';
+import type { View, Library } from '../types';
 import LibraryItem from '../components/LibraryItem';
 import LibraryModal from '../components/LibraryModal';
 import {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ForbiddenRule, LengthRule, RegexRule, Rule } from '../types';
+import type { ForbiddenRule, LengthRule, RegexRule, Rule } from '../types';
 import { generateRuleId } from '../utils/rules';
 
 type RuleModalProps = {

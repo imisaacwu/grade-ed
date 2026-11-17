@@ -1,5 +1,6 @@
+import React from 'react';
 import { useState } from 'react';
-import { View } from './types';
+import type { View } from './types';
 import Header from './components/Header';
 import LibraryDetail from './views/LibraryDetail';
 import Home from './views/Home';

@@ -61,4 +61,4 @@ scripts/build.mjs   The whole build pipeline
 
 ## Feedback
 
-Email `tleo@cs` for bugs, suggestions, or to contribute.
+Email [isaacw1925@gmail.com](mailto:isaacw1925@gmail.com) for bugs, suggestions, or to contribute.

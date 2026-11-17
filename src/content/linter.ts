@@ -6,11 +6,18 @@
  * highlights flagged lines with hover tooltips.
  */
 
-import { Rule } from '../popup/types';
+/*
+ * linter.ts — content script for Ed's Feedback tab.
+ *
+ * Loads user-defined rules from chrome.storage.local (seeded with sensible
+ * defaults on first run), runs them against each line of the diff view, and
+ * highlights flagged lines with hover tooltips.
+ */
+import type { Rule } from '../popup/types';
 import {
   DEFAULT_RULES,
   isRule,
-  LineIssue,
+  type LineIssue,
   lintCode,
 } from '../popup/utils/rules';
 

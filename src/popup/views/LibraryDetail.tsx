@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Library } from '../types';
+import type { Library } from '../types';
 import DeductionItem from '../components/DeductionItem';
 import { loadLibraries, updateLibrary } from '../utils/libraryStorage';
 

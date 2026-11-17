@@ -1,5 +1,5 @@
 import React from 'react';
-import { View } from '../types';
+import type { View } from '../types';
 
 type HeaderProps = {
     activeTab: View;

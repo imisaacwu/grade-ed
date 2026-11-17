@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View } from '../types';
+import type { View } from '../types';
 import { saveLibraries } from '../utils/libraryStorage';
 
 type SettingsProps = {

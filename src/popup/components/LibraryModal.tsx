@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Library } from '../types';
+import type { Library } from '../types';
 
 type LibraryModalProps = {
   initialLibrary: Partial<Library>;

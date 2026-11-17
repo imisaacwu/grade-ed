@@ -1,4 +1,5 @@
-import { Library } from '../types';
+/// <reference types="chrome"/>
+import type { Library } from '../types';
 
 // Helper method to validate if an object is a Library
 export function isLibrary(obj: unknown): obj is Library {
